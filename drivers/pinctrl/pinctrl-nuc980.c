@@ -2666,6 +2666,18 @@ static int nuc980_get_groups(struct pinctrl_dev *pctldev, unsigned selector,
 	return 0;
 }
 
+int nuc980_gpio_set_mux(unsigned int gpio_num){
+
+	unsigned int reg,offset;
+	offset = (gpio_num >> 4) * 8 + ((gpio_num & 0x8) ? 4 : 0);
+
+	reg = __raw_readl(REG_MFP_GPA_L + offset);
+	reg = (reg & ~(0xF << ((gpio_num & 0x7) * 4))) | (0 << ((gpio_num & 0x7) * 4));
+
+	__raw_writel(reg, REG_MFP_GPA_L + offset);
+	return 0;
+}
+
 /*
  * selector = data.nux.func, which is entry number in nuc980_functions,
  * and group = data.mux.group, which is entry number in nuc980_pmx_func
@@ -2688,6 +2700,9 @@ int nuc980_set_mux(struct pinctrl_dev *pctldev, unsigned selector,
 
 		__raw_writel(reg, REG_MFP_GPA_L + offset);
 	}
+	nuc980_gpio_set_mux(0x6d); //led-upcom
+	nuc980_gpio_set_mux(0x6e); //led-alarm
+	nuc980_gpio_set_mux(0x6f); //led-run
 	return 0;
 }
 
