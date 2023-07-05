@@ -24,6 +24,7 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 
+
 #include <linux/mtd/physmap.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
@@ -49,6 +50,9 @@
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>
 #include <linux/i2c/i2c-hid.h>
+
+
+#include <linux/leds.h>
 
 #include <linux/platform_data/i2c-nuc980.h>
 #include <linux/platform_data/spi-nuc980.h>
@@ -662,6 +666,48 @@ struct platform_device nuc980_device_i2c0 = {
 	.dev = {
 		.platform_data = &nuc980_i2c0_data,
 	}
+};
+#endif
+
+
+#if defined(CONFIG_LEDS_GPIO)
+
+static struct gpio_led gpio_leds[] = {  
+    {  
+        .name = "run",  
+        .gpio = 207, //    
+        .default_state = LEDS_GPIO_DEFSTATE_ON, //默认LED亮  
+        .active_low = 1, //低电平亮  
+        .default_trigger = "heartbeat", //触发器  
+    }, 
+  {  
+        .name = "alarm",  
+        .gpio = 206, //    
+        .default_state = LEDS_GPIO_DEFSTATE_OFF, //默认LED亮  
+        .active_low = 1, //低电平亮  
+        .default_trigger = "none", //触发器  
+    }, 
+	{  
+        .name = "upcom",  
+        .gpio = 205, //    
+        .default_state = LEDS_GPIO_DEFSTATE_OFF, //默认LED亮  
+        .active_low = 1, //低电平亮  
+        .default_trigger = "none", //触发器  
+    }, 
+    
+};  
+  
+static struct gpio_led_platform_data gpio_led_info = {  
+     .leds          = gpio_leds,  
+     .num_leds     = ARRAY_SIZE(gpio_leds),  
+};
+
+static struct platform_device aga2_led_device = {
+    .name = "leds-gpio",
+    .id = -1,
+    .dev = {
+        .platform_data = &gpio_led_info,
+    },
 };
 #endif
 
@@ -1804,6 +1850,10 @@ static struct platform_device *nuc980_public_dev[] __initdata = {
 #if defined(CONFIG_NUC980_UART9) || defined(CONFIG_NUC980_UART9_MODULE)
 	&nuc980_serial_device9,
 #endif
+#if defined(CONFIG_LEDS_GPIO)
+	&aga2_led_device,
+#endif
+
 
 #if defined(CONFIG_NUC980_CAN0) || defined(CONFIG_NUC980_CAN0_MODULE)
 	&nuc980_device_can0,
