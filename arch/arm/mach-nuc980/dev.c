@@ -654,7 +654,7 @@ static struct resource nuc980_i2c0_resource[] = {
 };
 
 static struct nuc980_platform_i2c nuc980_i2c0_data = {
-	.bus_num = 0,
+	.bus_num = 1,
 	.bus_freq = 100000,
 };
 
@@ -734,7 +734,7 @@ static struct i2c_board_info __initdata nuc980_i2c_clients1[] = {
 
 //port 1
 static struct nuc980_platform_i2c nuc980_i2c1_data = {
-	.bus_num = 1,
+	.bus_num = 2,
 	.bus_freq = 100000,
 };
 
@@ -784,7 +784,7 @@ static struct i2c_board_info __initdata nuc980_i2c_clients2[] = {
 
 //port 2
 static struct nuc980_platform_i2c nuc980_i2c2_data = {
-	.bus_num = 2,
+	.bus_num = 3,
 	.bus_freq = 100000,
 };
 
@@ -815,7 +815,7 @@ struct platform_device nuc980_device_i2c2 = {
 #if defined(CONFIG_I2C_BUS_NUC980_P3) || defined(CONFIG_I2C_BUS_NUC980_P3_MODULE)
 //port 3
 static struct nuc980_platform_i2c nuc980_i2c3_data = {
-	.bus_num = 3,
+	.bus_num = 4,
 	.bus_freq = 100000,
 };
 
