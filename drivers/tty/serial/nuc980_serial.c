@@ -49,6 +49,8 @@
 #include <mach/sram.h>
 #include <linux/platform_data/dma-nuc980.h>
 
+#include <linux/gpio.h>
+#include <linux/hrtimer.h>
 
 #include "nuc980_serial.h"
 
@@ -79,7 +81,14 @@ struct uart_nuc980_port {
 	unsigned char       mcr_force; /* mask of forced bits */
 
 	struct serial_rs485 rs485; /* rs485 settings */
+	
 
+	ktime_t tick_period;
+	struct hrtimer timer;
+	unsigned int baudrate;
+	unsigned int bit_len;//uart frame  integer
+	unsigned int bit_len_decimal;//decimal
+	unsigned int tx_pin;
 #if defined(CONFIG_ENABLE_UART_PDMA) || defined(CONFIG_USE_OF)
 	struct nuc980_ip_rx_dma dma_rx;
 	struct nuc980_ip_tx_dma dma_tx;
@@ -479,32 +488,69 @@ static void nuc980_prepare_TX_dma(struct uart_nuc980_port *p)
 
 static void rs485_start_rx(struct uart_nuc980_port *port)
 {
-#if 0  // user can enable to control RTS pin level
-	// when enable this define, user need disable auto-flow control
-	struct uart_nuc980_port *up = (struct uart_nuc980_port *)port;
-
-	if(port->rs485.flags & SER_RS485_RTS_AFTER_SEND) {
-		// Set logical level for RTS pin equal to high
-		serial_out(port, UART_REG_MCR, (serial_in(port, UART_REG_MCR) & ~0x200) );
-	} else {
-		// Set logical level for RTS pin equal to low
-		serial_out(port, UART_REG_MCR, (serial_in(port, UART_REG_MCR) | 0x200) );
+	if(port->rs485.flags & SER_RS485_ENABLED)
+	{
+		// Set logical level for tx pin equal to low
+		gpio_set_value(port->tx_pin,0);
 	}
-#endif
 }
 
 static void rs485_stop_rx(struct uart_nuc980_port *port)
 {
-#if 0  // user can enable to control RTS pin level
-	// when enable this define, user need disable auto-flow control
-	if(port->rs485.flags & SER_RS485_RTS_ON_SEND) {
-		// Set logical level for RTS pin equal to high
-		serial_out(port, UART_REG_MCR, (serial_in(port, UART_REG_MCR) & ~0x200) );
-	} else {
-		// Set logical level for RTS pin equal to low
-		serial_out(port, UART_REG_MCR, (serial_in(port, UART_REG_MCR) | 0x200) );
+	if(port->rs485.flags & SER_RS485_ENABLED)
+	{
+		// Set logical level for tx pin equal to high
+		gpio_set_value(port->tx_pin,1);
 	}
-#endif
+
+}
+
+void nuc980_uart_cal_tick_period(struct uart_nuc980_port *p)
+{
+	unsigned int lcr;
+	s64 nstime_len, bittime;//ns
+	int baud_max;
+	p->bit_len = 2;//1 start + 1 stop bit
+	p->bit_len_decimal = 0;
+	lcr = serial_in(p, UART_REG_LCR);
+	switch(lcr & 0x3){
+		case 0:
+			p->bit_len += 5;
+			if(lcr & 0x4)//STOP bit
+				p->bit_len_decimal = 5;//0.5
+
+			break;
+		case 1:
+			p->bit_len += 6;
+			if(lcr & 0x4)
+				p->bit_len += 1;
+			break;
+		case 2:
+			p->bit_len += 7;
+			if(lcr & 0x4)
+				p->bit_len += 1;
+			break;
+		case 3:
+			p->bit_len += 8;
+			if(lcr & 0x4)
+				p->bit_len += 1;
+			break;
+	}
+	if(lcr & 0x8)//Parity bit
+		p->bit_len += 1;
+
+	baud_max=p->baudrate;
+	// if (baudMax>=38400){
+	// 	baudMax=38400;
+	// }
+	bittime = ((NSEC_PER_SEC + (baud_max-1)) / baud_max);
+	nstime_len = bittime *  p->bit_len;
+	if(p->bit_len_decimal)
+		nstime_len += (bittime/2);
+
+	p->tick_period = ktime_set(0, nstime_len/4+1);//ns
+
+	return;
 
 }
 
@@ -516,8 +562,35 @@ static inline void __stop_tx(struct uart_nuc980_port *p)
 	if ((ier = serial_in(p, UART_REG_IER)) & THRE_IEN) {
 		serial_out(p, UART_REG_IER, ier & ~THRE_IEN);
 	}
-	if (p->rs485.flags & SER_RS485_ENABLED)
-		rs485_start_rx(p);
+	if (p->rs485.flags & SER_RS485_ENABLED) {
+
+		if((serial_in(p, UART_REG_FSR) & TE_FLAG) == 0)//not TX END flag
+		{
+			//ktime_t now = ktime_get();
+
+			if((serial_in(p, UART_REG_ISR) & THRE_IF) == 0){ //not TX empty
+
+				serial_out(p, UART_REG_IER, serial_in(p, UART_REG_IER) | THRE_IEN);//enable TX empty interrupt
+			}
+			else
+			{
+				if(p->baudrate == 0)
+				{
+					WARN(1, "uart port baud rate == 0\n");
+					p->baudrate = 1200;
+				}
+
+				nuc980_uart_cal_tick_period(p);//4.88us
+				
+				hrtimer_start(&p->timer, p->tick_period, HRTIMER_MODE_REL);
+			}
+		}
+		else
+		{
+			rs485_start_rx(p);
+		}
+	}
+		
 
 	if (tty->termios.c_line == N_IRDA) {
 		while(!(serial_in(p, UART_REG_FSR) & TX_EMPTY));
@@ -912,7 +985,7 @@ static int nuc980serial_startup(struct uart_port *port)
 	serial_out(up, UART_REG_FCR, serial_in(up, UART_REG_FCR) | 0x0);
 #else
 	// FIFO trigger level 4 byte // RTS trigger level 8 bytes
-	serial_out(up, UART_REG_FCR, serial_in(up, UART_REG_FCR) | 0x10 | 0x20000);
+	serial_out(up, UART_REG_FCR, serial_in(up, UART_REG_FCR) | 0x10);
 #endif
 
 	serial_out(up, UART_REG_LCR, 0x7); // 8 bit
@@ -923,12 +996,16 @@ static int nuc980serial_startup(struct uart_port *port)
 		serial_out(up, UART_REG_IER, RLS_IEN | BUFERR_IEN);
 	else
 #endif
-		serial_out(up, UART_REG_IER, RTO_IEN | RDA_IEN | TIME_OUT_EN | BUFERR_IEN);
+	
+	serial_out(up, UART_REG_IER, RTO_IEN | RDA_IEN | TIME_OUT_EN | BUFERR_IEN);
 	//serial_out(up, UART_REG_IER, RTO_IEN | RDA_IEN | TIME_OUT_EN);
 
 	/* 12MHz reference clock input, 115200 */
 	serial_out(up, UART_REG_BAUD, 0x30000066);
-
+	up->baudrate = 115200;
+	if(up->rs485.flags) {
+		gpio_direction_output(up->tx_pin,0);
+	}
 #if defined(CONFIG_ENABLE_UART_PDMA) || defined(CONFIG_USE_OF)
 	if(up->uart_pdma_enable_flag == 1) {
 		up->baud_rate = 0;
@@ -1163,7 +1240,20 @@ static const char *nuc980serial_type(struct uart_port *port)
 {
 	return (port->type == PORT_NUC980) ? "NUC980" : NULL;
 }
-
+static enum hrtimer_restart nuc980_serial_hr_callback(struct hrtimer *timer)
+{
+	struct uart_nuc980_port *p = container_of(timer, struct uart_nuc980_port, timer);
+	ktime_t now = ktime_get();
+	
+	if(serial_in(p, UART_REG_FSR) & TE_FLAG)
+	{
+		
+		rs485_start_rx(p);
+		return HRTIMER_NORESTART;
+	}
+	hrtimer_forward(timer, now, p->tick_period);
+	return HRTIMER_RESTART;
+}
 /* Enable or disable the rs485 support */
 static int nuc980serial_config_rs485(struct uart_port *port, struct serial_rs485 *rs485conf)
 {
@@ -1175,20 +1265,20 @@ static int nuc980serial_config_rs485(struct uart_port *port, struct serial_rs485
 		p->rs485.delay_rts_before_send = 1000;
 
 	serial_out(p, UART_FUN_SEL, (serial_in(p, UART_FUN_SEL) & ~FUN_SEL_Msk) );
-
 	if(rs485conf->flags & SER_RS485_ENABLED) {
-		serial_out(p, UART_FUN_SEL, (serial_in(p, UART_FUN_SEL) | FUN_SEL_RS485) );
+		p->tick_period = ktime_set(0, 1000000);//default 1ms
 
-		//rs485_start_rx(p);    // stay in Rx mode
+		hrtimer_init(&p->timer, HRTIMER_BASE_MONOTONIC, HRTIMER_MODE_REL);
+		p->timer.function = nuc980_serial_hr_callback;
 
-		if(rs485conf->flags & SER_RS485_RTS_ON_SEND) {
-			serial_out(p, UART_REG_MCR, (serial_in(p, UART_REG_MCR) & ~0x200) );
-		} else {
-			serial_out(p, UART_REG_MCR, (serial_in(p, UART_REG_MCR) | 0x200) );
-		}
+		//hrtimer_start(&p->timer, p->tick_period, HRTIMER_MODE_REL);
 
-		// set auto direction mode
-		serial_out(p,UART_REG_ALT_CSR,(serial_in(p, UART_REG_ALT_CSR) | (1 << 10)) );
+		rs485_start_rx(p);    // stay in Rx mode
+		
+		// disable auto direction mode
+		serial_out(p,UART_REG_ALT_CSR,(serial_in(p, UART_REG_ALT_CSR) & ~(1 << 10)) );
+
+
 	}
 
 	return 0;
@@ -1770,7 +1860,8 @@ static int  get_uart_port_number(struct platform_device *pdev)
 static int nuc980serial_probe(struct platform_device *pdev)
 {
 	struct uart_nuc980_port *up;
-
+	char pin_name[32];
+	int name_len;
 	int ret, i;
 
 #if defined(CONFIG_USE_OF)
@@ -1846,7 +1937,16 @@ static int nuc980serial_probe(struct platform_device *pdev)
 	up->port.private_data   = p->private_data;
 	up->port.dev            = &pdev->dev;
 	up->port.flags          = ASYNC_BOOT_AUTOCONF;
-
+	up->rs485.flags			= ((unsigned int)(p->private_data) &0xff);
+	if(up->rs485.flags) {
+		up->tx_pin				= ((unsigned int)(p->private_data)>>8);
+		
+		name_len=snprintf(pin_name,32,"TC%ud",up->tx_pin);
+		pin_name[name_len]=0;
+		gpio_request(up->tx_pin,pin_name);
+		gpio_direction_output(up->tx_pin,0);
+		nuc980serial_config_rs485(&up->port,&up->rs485);
+	}
 	/* Possibly override default I/O functions.  */
 	if (p->serial_in)
 		up->port.serial_in = p->serial_in;
