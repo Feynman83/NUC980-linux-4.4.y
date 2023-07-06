@@ -37,6 +37,15 @@
 	.uartclk	= 12000000,				\
 }
 
+#define NUC980SERIAL_PORT_485(name, tx_ctrl) \
+{                                        \
+	.membase 		= name##_BA,                \
+	.mapbase 		= name##_PA,                \
+	.irq 			= IRQ_##name,                   \
+	.uartclk 		= 12000000,                 \
+	.private_data 	= (void*)(1 | (tx_ctrl << 8)),  \
+}
+
 #define NUC980PID	NUC980_VA_GCR
 
 extern struct platform_device nuc980_device_sdh;
