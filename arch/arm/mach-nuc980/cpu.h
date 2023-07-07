@@ -37,13 +37,13 @@
 	.uartclk	= 12000000,				\
 }
 
-#define NUC980SERIAL_PORT_485(name, tx_ctrl) \
+#define NUC980SERIAL_PORT_485(name, tx_ctrl,low_rx) \
 {                                        \
 	.membase 		= name##_BA,                \
 	.mapbase 		= name##_PA,                \
 	.irq 			= IRQ_##name,                   \
 	.uartclk 		= 12000000,                 \
-	.private_data 	= (void*)(1 | (tx_ctrl << 8)),  \
+	.private_data 	= (void*)(1 | (tx_ctrl << 8) | (low_rx<<16)),  \
 }
 
 #define NUC980PID	NUC980_VA_GCR

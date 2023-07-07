@@ -89,6 +89,7 @@ struct uart_nuc980_port {
 	unsigned int bit_len;//uart frame  integer
 	unsigned int bit_len_decimal;//decimal
 	unsigned int tx_pin;
+	unsigned int low_rx;
 #if defined(CONFIG_ENABLE_UART_PDMA) || defined(CONFIG_USE_OF)
 	struct nuc980_ip_rx_dma dma_rx;
 	struct nuc980_ip_tx_dma dma_tx;
@@ -491,7 +492,7 @@ static void rs485_start_rx(struct uart_nuc980_port *port)
 	if(port->rs485.flags & SER_RS485_ENABLED)
 	{
 		// Set logical level for tx pin equal to low
-		gpio_set_value(port->tx_pin,0);
+		gpio_set_value(port->tx_pin,!(port->low_rx));
 	}
 }
 
@@ -500,7 +501,7 @@ static void rs485_stop_rx(struct uart_nuc980_port *port)
 	if(port->rs485.flags & SER_RS485_ENABLED)
 	{
 		// Set logical level for tx pin equal to high
-		gpio_set_value(port->tx_pin,1);
+		gpio_set_value(port->tx_pin,port->low_rx);
 	}
 
 }
@@ -1004,7 +1005,7 @@ static int nuc980serial_startup(struct uart_port *port)
 	serial_out(up, UART_REG_BAUD, 0x30000066);
 	up->baudrate = 115200;
 	if(up->rs485.flags) {
-		gpio_direction_output(up->tx_pin,0);
+		gpio_direction_output(up->tx_pin,!(up->low_rx));
 	}
 #if defined(CONFIG_ENABLE_UART_PDMA) || defined(CONFIG_USE_OF)
 	if(up->uart_pdma_enable_flag == 1) {
@@ -1939,12 +1940,12 @@ static int nuc980serial_probe(struct platform_device *pdev)
 	up->port.flags          = ASYNC_BOOT_AUTOCONF;
 	up->rs485.flags			= ((unsigned int)(p->private_data) &0xff);
 	if(up->rs485.flags) {
-		up->tx_pin				= ((unsigned int)(p->private_data)>>8);
-		
+		up->tx_pin				= ((unsigned int)(p->private_data)>>8)&0xff;
+		up->low_rx				= ((unsigned int)(p->private_data)>>16)&0xff;
 		name_len=snprintf(pin_name,32,"TC%ud",up->tx_pin);
 		pin_name[name_len]=0;
 		gpio_request(up->tx_pin,pin_name);
-		gpio_direction_output(up->tx_pin,0);
+		gpio_direction_output(up->tx_pin,!(up->low_rx));
 		nuc980serial_config_rs485(&up->port,&up->rs485);
 	}
 	/* Possibly override default I/O functions.  */
