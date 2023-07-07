@@ -1674,7 +1674,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart1_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1694,7 +1694,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart2_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1714,7 +1714,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart3_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1734,7 +1734,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart4_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1754,7 +1754,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart5_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1774,7 +1774,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart6_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1794,7 +1794,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart7_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1814,7 +1814,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart8_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 
@@ -1834,7 +1834,7 @@ void nuc980serial_set_clock(struct uart_nuc980_port *up)
 		clk = clk_get(NULL, "uart9_eclk_div");
 
 		//clk_set_rate(clk, 100000000);
-		clk_set_rate(clk, 150000000);
+		clk_set_rate(clk, 25000000);
 		up->port.uartclk = clk_get_rate(clk);
 	}
 }
