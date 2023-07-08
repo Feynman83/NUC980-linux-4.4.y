@@ -15,13 +15,22 @@
 #include <linux/slab.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
+#include <linux/io.h>
 
+
+#include <mach/mfp.h>
+
+#define ADC_CTRL (0x00)
+#define ADC_CONF (0x04)
+#define ADC_IER (0x08)
+#define ADC_ISR (0x0c)
+#define ADC_DATA (0x28)
 struct iio_xbro{
     int gpio;
     unsigned long flags;
     const char * name;
-    unsigned int chip;
-    unsigned int channel;
+    unsigned int chip;  
+    unsigned int channel; //greater than 8 means ad for DI
 };
 
 
@@ -215,6 +224,8 @@ static struct attribute_group attr_group_xbro = {
 	.attrs = attrs_xbro,
 };
 
+
+void __iomem * NUC980_ADC_REG_BASE;
 static ssize_t attr_store(struct kobject *kobj, struct kobj_attribute *attr_kobj,
 			 const char *buf, size_t count)
 {
@@ -250,13 +261,45 @@ static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
     return -EAGAIN;
 }
 
+static void adc_channel_switch(unsigned int channel){
 
+    gpio_set_value_cansleep(2,!!(channel&0x01));
+    gpio_set_value_cansleep(3,!!(channel&0x02));
+    gpio_set_value_cansleep(4,!!(channel&0x04));
+}
+
+
+static unsigned int adc_sample(unsigned int channel){
+
+    unsigned int chip=channel/8;
+    unsigned int ad_channel=channel%8;
+
+    writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|((chip)<<12), NUC980_ADC_REG_BASE+ADC_CONF); //select chip
+    
+    writel(readl(NUC980_ADC_REG_BASE+ADC_IER)|0x01, NUC980_ADC_REG_BASE+ADC_IER); 
+    writel(readl(NUC980_ADC_REG_BASE+ADC_CTRL)|((1)<<8), NUC980_ADC_REG_BASE+ADC_CTRL); //start adc convert
+
+
+    
+    return 0;
+}
 static int __init nuc980nadc_init(void){
     struct clk * clk_eclk;
     struct clk * clk_adc;
  
-    clk_eclk=clk_get(NULL, "adc_eclk");
+
+    //PA2,3,4 for ADC channel select 
+    nuc980_mfp_set_port_a(2,0);
+    nuc980_mfp_set_port_a(3,0);
+    nuc980_mfp_set_port_a(4,0);
     
+
+    gpio_request_one(2,GPIOF_OUT_INIT_LOW,"adc_sel0");
+    gpio_request_one(3,GPIOF_OUT_INIT_LOW,"adc_sel1");
+    gpio_request_one(4,GPIOF_OUT_INIT_LOW,"adc_sel2");
+
+
+    clk_eclk=clk_get(NULL, "adc_eclk");
     clk_prepare(clk_eclk);
     clk_enable(clk_eclk);
     clk_set_rate(clk_eclk, 4000000);
@@ -264,6 +307,11 @@ static int __init nuc980nadc_init(void){
     clk_adc= clk_get(NULL, "adc");
     clk_prepare(clk_adc);
     clk_enable(clk_adc);
+
+    NUC980_ADC_REG_BASE = ioremap_nocache(0xB0043000, 0xff);
+    writel(3, NUC980_ADC_REG_BASE+ADC_CTRL);
+    writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|0x400000, NUC980_ADC_REG_BASE+ADC_CONF);
+    writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|0x4, NUC980_ADC_REG_BASE+ADC_CONF);
     return 0;
 }
 
