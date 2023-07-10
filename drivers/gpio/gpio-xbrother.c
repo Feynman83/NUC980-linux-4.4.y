@@ -81,6 +81,21 @@ static struct iio_xbro iio_xbro_list[]={
         .name="do_pwr_hub",
     },
     {
+        .gpio=204,
+        .flags=GPIOF_IN|GPIOF_ACTIVE_LOW,
+        .name="di_ext1",
+    },
+    {
+        .gpio=64,
+        .flags=GPIOF_IN|GPIOF_ACTIVE_LOW,
+        .name="di_ext2",
+    },
+    {
+        .gpio=39,
+        .flags=GPIOF_IN|GPIOF_ACTIVE_LOW,
+        .name="di_ext3",
+    },
+    {
         .gpio=-1,
         .name="ai01",
         .channel=0,
@@ -273,6 +288,30 @@ static  struct kobj_attribute attr_all []={
         },
         .show=attr_show,
         .store=attr_store,
+    },
+    {
+        .attr={
+            .name="di_ext1",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di_ext2",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di_ext3",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
     },
     {
         .attr={

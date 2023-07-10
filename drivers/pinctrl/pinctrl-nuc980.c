@@ -2700,6 +2700,8 @@ int nuc980_set_mux(struct pinctrl_dev *pctldev, unsigned selector,
 
 		__raw_writel(reg, REG_MFP_GPA_L + offset);
 	}
+	nuc980_gpio_set_mux(0x6b);
+	nuc980_gpio_set_mux(0x6c);
 	nuc980_gpio_set_mux(0x6d); //led-upcom
 	nuc980_gpio_set_mux(0x6e); //led-alarm
 	nuc980_gpio_set_mux(0x6f); //led-run
