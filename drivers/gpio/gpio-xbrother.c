@@ -66,6 +66,11 @@ static struct iio_xbro iio_xbro_list[]={
         .name="do04",
     },
     {
+        .gpio=5,
+        .flags=GPIOF_OUT_INIT_LOW,
+        .name="do_buzz",
+    },
+    {
         .gpio=196,
         .flags=GPIOF_OUT_INIT_HIGH,
         .name="do_pwr_4g",
@@ -260,6 +265,14 @@ static  struct kobj_attribute attr_all []={
     {
         .attr={
             .name="do04",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0664),
+        },
+        .show=attr_show,
+        .store=attr_store,
+    },
+    {
+        .attr={
+            .name="do_buzz",
             .mode=VERIFY_OCTAL_PERMISSIONS(0664),
         },
         .show=attr_show,
