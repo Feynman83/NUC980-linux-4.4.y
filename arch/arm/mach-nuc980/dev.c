@@ -80,7 +80,7 @@
     }
 
 static struct gpio_keys_button gpio_keys_aga2_buttons[] = {
-    GPIO_BUTTON(NUC980_PA0, KEY_SPACE, 1, "Recovery", 1, 20),
+    GPIO_BUTTON(NUC980_PA6, KEY_SPACE, 1, "Recovery", 1, 20),
 };
 
 static struct gpio_keys_platform_data aga2_button_data = {
