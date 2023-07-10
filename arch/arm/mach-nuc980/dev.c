@@ -53,12 +53,51 @@
 
 
 #include <linux/leds.h>
+#include <linux/input.h>
+#include <linux/gpio_keys.h>
 
 #include <linux/platform_data/i2c-nuc980.h>
 #include <linux/platform_data/spi-nuc980.h>
 #include <linux/platform_data/dma-nuc980.h>
 
 #include "cpu.h"
+
+
+
+
+#ifdef CONFIG_KEYBOARD_GPIO
+
+
+#define GPIO_BUTTON(gpio_num, ev_code, act_low, descr, wake, debounce) \
+    {                                                                  \
+        .gpio = gpio_num,                                              \
+        .type = EV_KEY,                                                \
+        .code = ev_code,                                               \
+        .active_low = act_low,                                         \
+        .desc = "btn " descr,                                          \
+        .wakeup = wake,                                                \
+        .debounce_interval = debounce,                                 \
+    }
+
+static struct gpio_keys_button gpio_keys_aga2_buttons[] = {
+    GPIO_BUTTON(NUC980_PA0, KEY_SPACE, 1, "Recovery", 1, 20),
+};
+
+static struct gpio_keys_platform_data aga2_button_data = {
+    .buttons = gpio_keys_aga2_buttons,
+    .nbuttons = ARRAY_SIZE(gpio_keys_aga2_buttons),
+};
+
+static struct platform_device aga2_button_device = {
+    .name = "gpio-keys",
+    .id = -1,
+    .dev = {
+        .platform_data = &aga2_button_data,
+    },
+};
+
+#endif
+
 
 /* USB EHCI Host Controller */
 #if defined(CONFIG_USB_EHCI_HCD) || defined(CONFIG_USB_EHCI_HCD_MODULE)
@@ -1854,6 +1893,9 @@ static struct platform_device *nuc980_public_dev[] __initdata = {
 	&aga2_led_device,
 #endif
 
+#if defined(CONFIG_KEYBOARD_GPIO)
+	&aga2_button_device,
+#endif
 
 #if defined(CONFIG_NUC980_CAN0) || defined(CONFIG_NUC980_CAN0_MODULE)
 	&nuc980_device_can0,
