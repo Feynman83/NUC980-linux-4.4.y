@@ -508,7 +508,7 @@ static unsigned int adc_sample(unsigned int channel){
     adc_channel_switch(ad_channel);
 
    
-    writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|((chip)<<12), NUC980_ADC_REG_BASE+ADC_CONF); //select chip
+    writel((readl(NUC980_ADC_REG_BASE+ADC_CONF)&0xFFFF0FFF)|((chip)<<12), NUC980_ADC_REG_BASE+ADC_CONF); //select chip
     
 
     adc_min=0xffffffff;
