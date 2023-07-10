@@ -145,6 +145,46 @@ static struct iio_xbro iio_xbro_list[]={
         .name="di08",
         .channel=15,
     },
+    {
+        .gpio=-1,
+        .name="di09",
+        .channel=16,
+    },
+    {
+        .gpio=-1,
+        .name="di10",
+        .channel=17,
+    },
+    {
+        .gpio=-1,
+        .name="di11",
+        .channel=18,
+    },
+    {
+        .gpio=-1,
+        .name="di12",
+        .channel=19,
+    },
+    {
+        .gpio=-1,
+        .name="di13",
+        .channel=20,
+    },
+    {
+        .gpio=-1,
+        .name="di14",
+        .channel=21,
+    },
+    {
+        .gpio=-1,
+        .name="di15",
+        .channel=22,
+    },
+    {
+        .gpio=-1,
+        .name="di16",
+        .channel=23,
+    },
 };
 static struct kobject *kobj_xbro;
 
@@ -323,6 +363,70 @@ static  struct kobj_attribute attr_all []={
         .show=attr_show,
         .store=NULL,
     },
+    {
+        .attr={
+            .name="di09",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di10",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di11",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di12",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di13",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di14",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di15",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di16",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
 
 };
 
@@ -366,7 +470,12 @@ static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
         return sprintf(buf, "%d\n", gpio_get_value_cansleep(iio_xbro_list[index].gpio));
     }else{  //do AD sample
         adc_raw=adc_sample(iio_xbro_list[index].channel);
-        if(iio_xbro_list[index].channel>=8){
+        adc_raw=adc_sample(iio_xbro_list[index].channel);
+        if(iio_xbro_list[index].channel<8){
+          adc_raw= adc_raw*1018*5/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
+        }
+        else
+        {
             if(adc_raw>1000){
                 adc_raw=1;
             }else{
@@ -383,6 +492,7 @@ static void adc_channel_switch(unsigned int channel){
     gpio_set_value_cansleep(GPIO_ADC_SEL0,!!(channel&0x01));
     gpio_set_value_cansleep(GPIO_ADC_SEL1,!!(channel&0x02));
     gpio_set_value_cansleep(GPIO_ADC_SEL2,!!(channel&0x04));
+    msleep(10);
 }
 
 
@@ -397,7 +507,7 @@ static unsigned int adc_sample(unsigned int channel){
     
     adc_channel_switch(ad_channel);
 
-    msleep(1);
+   
     writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|((chip)<<12), NUC980_ADC_REG_BASE+ADC_CONF); //select chip
     
 
@@ -429,7 +539,14 @@ static unsigned int adc_sample(unsigned int channel){
 static int __init nuc980nadc_init(void){
     struct clk * clk_eclk;
     struct clk * clk_adc;
- 
+    
+
+
+    //select adc0-adc3
+    nuc980_mfp_set_port_b(0,8);
+    nuc980_mfp_set_port_b(1,8);
+    nuc980_mfp_set_port_b(2,8);
+    nuc980_mfp_set_port_b(3,8);
 
     //PA2,3,4 for ADC channel select 
     nuc980_mfp_set_port_a(GPIO_ADC_SEL0,0);
