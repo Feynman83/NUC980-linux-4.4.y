@@ -2,6 +2,7 @@
 
 
 #include "asm-generic/errno-base.h"
+#include "linux/delay.h"
 #include "linux/printk.h"
 #include "linux/stddef.h"
 #include <linux/kobject.h>
@@ -20,17 +21,26 @@
 
 #include <mach/mfp.h>
 
+#define  ADC_SAMPLE_NUM (128)
+#define NUC980_ADC_REG_BEGINE (0xB0043000)
+
 #define ADC_CTRL (0x00)
 #define ADC_CONF (0x04)
 #define ADC_IER (0x08)
 #define ADC_ISR (0x0c)
 #define ADC_DATA (0x28)
+
+
+
+#define GPIO_ADC_SEL0 (0x02)
+#define GPIO_ADC_SEL1 (0x03)
+#define GPIO_ADC_SEL2 (0x04)
+
 struct iio_xbro{
     int gpio;
     unsigned long flags;
     const char * name;
-    unsigned int chip;  
-    unsigned int channel; //greater than 8 means ad for DI
+    unsigned int channel; //greater than 8 is ai channel
 };
 
 
@@ -58,50 +68,82 @@ static struct iio_xbro iio_xbro_list[]={
     {
         .gpio=-1,
         .name="ai01",
-        .chip=0,
         .channel=0,
     },
     {
         .gpio=-1,
         .name="ai02",
-        .chip=0,
         .channel=1,
     },
     {
         .gpio=-1,
         .name="ai03",
-        .chip=0,
         .channel=2,
     },
     {
         .gpio=-1,
         .name="ai04",
-        .chip=0,
         .channel=3,
     },
     {
         .gpio=-1,
         .name="ai05",
-        .chip=0,
         .channel=4,
     },
     {
         .gpio=-1,
         .name="ai06",
-        .chip=0,
         .channel=5,
     },
     {
         .gpio=-1,
         .name="ai07",
-        .chip=0,
         .channel=6,
     },
     {
         .gpio=-1,
         .name="ai08",
-        .chip=0,
         .channel=7,
+    },
+    {
+        .gpio=-1,
+        .name="di01",
+        .channel=8,
+    },
+    {
+        .gpio=-1,
+        .name="di02",
+        .channel=9,
+    },
+    {
+        .gpio=-1,
+        .name="di03",
+        .channel=10,
+    },
+    {
+        .gpio=-1,
+        .name="di04",
+        .channel=11,
+    },
+    {
+        .gpio=-1,
+        .name="di05",
+        .channel=12,
+    },
+    {
+        .gpio=-1,
+        .name="di06",
+        .channel=13,
+    },
+    {
+        .gpio=-1,
+        .name="di07",
+        .channel=14,
+    },
+    {
+        .gpio=-1,
+        .name="di08",
+        .channel=15,
     },
 };
 static struct kobject *kobj_xbro;
@@ -114,7 +156,7 @@ static struct kobject *kobj_xbro;
 
 
 
-
+static unsigned int adc_sample(unsigned int channel);
 
 static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
 			char *buf);
@@ -217,6 +259,71 @@ static  struct kobj_attribute attr_all []={
         .show=attr_show,
         .store=NULL,
     },
+    {
+        .attr={
+            .name="di01",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di02",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di03",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di04",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di05",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di06",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di07",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di08",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+
 };
 
 static struct attribute* attrs_xbro[MAX_XBR_ATTR_NUM];
@@ -225,7 +332,8 @@ static struct attribute_group attr_group_xbro = {
 };
 
 
-void __iomem * NUC980_ADC_REG_BASE;
+void volatile __iomem * NUC980_ADC_REG_BASE=(void volatile __iomem *)(0xF0043000);
+
 static ssize_t attr_store(struct kobject *kobj, struct kobj_attribute *attr_kobj,
 			 const char *buf, size_t count)
 {
@@ -249,6 +357,7 @@ static ssize_t attr_store(struct kobject *kobj, struct kobj_attribute *attr_kobj
 static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
 			char *buf){
     int index;
+    unsigned int adc_raw;
     index=   attr_kobj-attr_all;
     if(index <0 || index >=sizeof(attr_all)/(sizeof(struct kobj_attribute))){
         return -EINVAL;
@@ -256,16 +365,24 @@ static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
     if(iio_xbro_list[index].gpio>=0){
         return sprintf(buf, "%d\n", gpio_get_value_cansleep(iio_xbro_list[index].gpio));
     }else{  //do AD sample
-        return -EINVAL;
+        adc_raw=adc_sample(iio_xbro_list[index].channel);
+        if(iio_xbro_list[index].channel>=8){
+            if(adc_raw>1000){
+                adc_raw=1;
+            }else{
+                adc_raw=0;
+            }
+        }
+        return snprintf(buf, PAGE_SIZE, "%u\n", adc_raw);
     }
     return -EAGAIN;
 }
 
 static void adc_channel_switch(unsigned int channel){
 
-    gpio_set_value_cansleep(2,!!(channel&0x01));
-    gpio_set_value_cansleep(3,!!(channel&0x02));
-    gpio_set_value_cansleep(4,!!(channel&0x04));
+    gpio_set_value_cansleep(GPIO_ADC_SEL0,!!(channel&0x01));
+    gpio_set_value_cansleep(GPIO_ADC_SEL1,!!(channel&0x02));
+    gpio_set_value_cansleep(GPIO_ADC_SEL2,!!(channel&0x04));
 }
 
 
@@ -274,14 +391,40 @@ static unsigned int adc_sample(unsigned int channel){
     unsigned int chip=channel/8;
     unsigned int ad_channel=channel%8;
 
+    volatile  int adc_wait;
+    unsigned int adc_min,adc_max,adc_sum,adc_raw;
+    int i;
+    
+    adc_channel_switch(ad_channel);
+
+    msleep(1);
     writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|((chip)<<12), NUC980_ADC_REG_BASE+ADC_CONF); //select chip
     
-    writel(readl(NUC980_ADC_REG_BASE+ADC_IER)|0x01, NUC980_ADC_REG_BASE+ADC_IER); 
-    writel(readl(NUC980_ADC_REG_BASE+ADC_CTRL)|((1)<<8), NUC980_ADC_REG_BASE+ADC_CTRL); //start adc convert
 
+    adc_min=0xffffffff;
+    adc_max=0;
+    adc_sum=0;
+    for(i=0;i<ADC_SAMPLE_NUM+2;i++){
+        writel(readl(NUC980_ADC_REG_BASE+ADC_IER)|0x01, NUC980_ADC_REG_BASE+ADC_IER); 
+        writel(readl(NUC980_ADC_REG_BASE+ADC_CTRL)|((1)<<8), NUC980_ADC_REG_BASE+ADC_CTRL); //start adc convert
 
-    
-    return 0;
+        adc_wait=1000;
+        while((readl(NUC980_ADC_REG_BASE+ADC_ISR)&0x400)==0){
+            adc_wait--;
+            if(adc_wait<=0) break;
+        }
+        adc_raw=readl(NUC980_ADC_REG_BASE+ADC_DATA)&0xfff;
+
+        if(adc_raw>adc_max){
+            adc_max=adc_raw;
+        }
+        if(adc_raw<adc_min){
+            adc_min=adc_raw;
+        }
+        adc_sum+=adc_raw;
+    }
+
+    return (adc_sum-adc_max-adc_min)/ADC_SAMPLE_NUM;
 }
 static int __init nuc980nadc_init(void){
     struct clk * clk_eclk;
@@ -289,15 +432,25 @@ static int __init nuc980nadc_init(void){
  
 
     //PA2,3,4 for ADC channel select 
-    nuc980_mfp_set_port_a(2,0);
-    nuc980_mfp_set_port_a(3,0);
-    nuc980_mfp_set_port_a(4,0);
+    nuc980_mfp_set_port_a(GPIO_ADC_SEL0,0);
+    nuc980_mfp_set_port_a(GPIO_ADC_SEL1,0);
+    nuc980_mfp_set_port_a(GPIO_ADC_SEL2,0);
     
 
-    gpio_request_one(2,GPIOF_OUT_INIT_LOW,"adc_sel0");
-    gpio_request_one(3,GPIOF_OUT_INIT_LOW,"adc_sel1");
-    gpio_request_one(4,GPIOF_OUT_INIT_LOW,"adc_sel2");
 
+    if(gpio_request_one(GPIO_ADC_SEL0,GPIOF_OUT_INIT_LOW,"adc_sel0")){
+        pr_err("gpio %d request failed\n",GPIO_ADC_SEL0);
+        return -EINVAL;
+    }
+    if(gpio_request_one(GPIO_ADC_SEL1,GPIOF_OUT_INIT_LOW,"adc_sel1")){
+        pr_err("gpio %d request failed\n",GPIO_ADC_SEL1);
+        return -EINVAL;
+    }
+    if(gpio_request_one(GPIO_ADC_SEL2,GPIOF_OUT_INIT_LOW,"adc_sel2")){
+        pr_err("gpio %d request failed\n",GPIO_ADC_SEL2);
+        return -EINVAL;
+    }
+   
 
     clk_eclk=clk_get(NULL, "adc_eclk");
     clk_prepare(clk_eclk);
@@ -308,7 +461,7 @@ static int __init nuc980nadc_init(void){
     clk_prepare(clk_adc);
     clk_enable(clk_adc);
 
-    NUC980_ADC_REG_BASE = ioremap_nocache(0xB0043000, 0xff);
+    NUC980_ADC_REG_BASE = ioremap_nocache(NUC980_ADC_REG_BEGINE, 0xff);
     writel(3, NUC980_ADC_REG_BASE+ADC_CTRL);
     writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|0x400000, NUC980_ADC_REG_BASE+ADC_CONF);
     writel(readl(NUC980_ADC_REG_BASE+ADC_CONF)|0x4, NUC980_ADC_REG_BASE+ADC_CONF);
