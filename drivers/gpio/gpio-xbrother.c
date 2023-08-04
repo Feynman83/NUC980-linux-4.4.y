@@ -220,6 +220,46 @@ static struct iio_xbro iio_xbro_list[]={
         .name="di16",
         .channel=23,
     },
+    {
+        .gpio=-1,
+        .name="w1",
+        .channel=24,
+    },
+    {
+        .gpio=-1,
+        .name="w2",
+        .channel=25,
+    },
+    {
+        .gpio=-1,
+        .name="w3",
+        .channel=26,
+    },
+    {
+        .gpio=-1,
+        .name="w4",
+        .channel=27,
+    },
+    {
+        .gpio=-1,
+        .name="w5",
+        .channel=28,
+    },
+    {
+        .gpio=-1,
+        .name="w6",
+        .channel=29,
+    },
+    {
+        .gpio=-1,
+        .name="w7",
+        .channel=30,
+    },
+    {
+        .gpio=-1,
+        .name="w8",
+        .channel=31,
+    },
 };
 static struct kobject *kobj_xbro;
 
@@ -518,6 +558,70 @@ static  struct kobj_attribute attr_all []={
         .show=attr_show,
         .store=NULL,
     },
+    {
+        .attr={
+            .name="w1",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w2",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w3",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w4",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w5",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w6",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w7",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="w8",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
 
 };
 
@@ -562,7 +666,7 @@ static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
     }else{  //do AD sample
         adc_raw=adc_sample(iio_xbro_list[index].channel);
         adc_raw=adc_sample(iio_xbro_list[index].channel);
-        if(iio_xbro_list[index].channel<8){
+        if(iio_xbro_list[index].channel<8 || iio_xbro_list[index].channel>=24){
           adc_raw= adc_raw*1018*5/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
         }
         else
