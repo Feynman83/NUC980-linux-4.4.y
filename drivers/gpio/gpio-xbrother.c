@@ -1027,16 +1027,18 @@ static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
     }else{  //do AD sample
         adc_raw=adc_sample(iio_xbro_list[index].channel);
         adc_raw=adc_sample(iio_xbro_list[index].channel);
-        
-        if(iio_xbro_list[index].mode==0){
-              adc_raw= adc_raw*1018*5/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
+        if(iio_xbro_list[index].channel>=8 && iio_xbro_list[index].channel<=23){
+            adc_raw= adc_raw*1018*12/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
         }else{
-              adc_raw= adc_raw*1018*12/4096; //ideal =adc_raw*12*1000/4096 ,,1018 for calibration
-              if(adc_raw >=2000){
-                adc_raw=1;
-              }else{
-                adc_raw=0;
-              }
+            adc_raw= adc_raw*1018*5/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
+        }
+        if(iio_xbro_list[index].mode!=0){
+            if(adc_raw >=2000){
+            adc_raw=1;
+            }else{
+            adc_raw=0;
+            }
+              
         }
         
         return snprintf(buf, PAGE_SIZE, "%u\n", adc_raw);
