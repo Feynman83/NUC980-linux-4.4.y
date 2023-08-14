@@ -40,7 +40,8 @@ struct iio_xbro{
     int gpio;
     unsigned long flags;
     const char * name;
-    unsigned int channel; //greater than 8 is ai channel
+    unsigned int channel; 
+    unsigned int mode; //0:ai 1:di 
 };
 
 
@@ -104,121 +105,289 @@ static struct iio_xbro iio_xbro_list[]={
         .gpio=-1,
         .name="ai01",
         .channel=0,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai02",
         .channel=1,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai03",
         .channel=2,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai04",
         .channel=3,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai05",
         .channel=4,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai06",
         .channel=5,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai07",
         .channel=6,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="ai08",
         .channel=7,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai09",
+        .channel=8,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai10",
+        .channel=9,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai11",
+        .channel=10,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai12",
+        .channel=11,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai13",
+        .channel=12,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai14",
+        .channel=13,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai15",
+        .channel=14,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai16",
+        .channel=15,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai17",
+        .channel=16,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai18",
+        .channel=17,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai19",
+        .channel=18,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai20",
+        .channel=19,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai21",
+        .channel=20,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai22",
+        .channel=21,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai23",
+        .channel=22,
+        .mode=0,
+    },
+    {
+        .gpio=-1,
+        .name="ai24",
+        .channel=23,
+        .mode=0,
     },
     {
         .gpio=-1,
         .name="di01",
-        .channel=8,
+        .channel=0,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di02",
-        .channel=9,
+        .channel=1,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di03",
-        .channel=10,
+        .channel=2,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di04",
-        .channel=11,
+        .channel=3,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di05",
-        .channel=12,
+        .channel=4,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di06",
-        .channel=13,
+        .channel=5,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di07",
-        .channel=14,
+        .channel=6,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di08",
-        .channel=15,
+        .channel=7,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di09",
-        .channel=16,
+        .channel=8,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di10",
-        .channel=17,
+        .channel=9,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di11",
-        .channel=18,
+        .channel=10,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di12",
-        .channel=19,
+        .channel=11,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di13",
-        .channel=20,
+        .channel=12,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di14",
-        .channel=21,
+        .channel=13,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di15",
-        .channel=22,
+        .channel=14,
+        .mode=1,
     },
     {
         .gpio=-1,
         .name="di16",
+        .channel=15,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di17",
+        .channel=16,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di18",
+        .channel=17,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di19",
+        .channel=18,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di20",
+        .channel=19,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di21",
+        .channel=20,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di22",
+        .channel=21,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di23",
+        .channel=22,
+        .mode=1,
+    },
+    {
+        .gpio=-1,
+        .name="di24",
         .channel=23,
+        .mode=1,
     },
     {
         .gpio=-1,
@@ -432,6 +601,134 @@ static  struct kobj_attribute attr_all []={
     },
     {
         .attr={
+            .name="ai09",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai10",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai11",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai12",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai13",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai14",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai15",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai16",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai17",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai18",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai19",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai20",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai21",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai22",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai23",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="ai24",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
             .name="di01",
             .mode=VERIFY_OCTAL_PERMISSIONS(0444),
         },
@@ -560,6 +857,70 @@ static  struct kobj_attribute attr_all []={
     },
     {
         .attr={
+            .name="di17",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di18",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di19",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di20",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di21",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di22",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di23",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
+            .name="di24",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0444),
+        },
+        .show=attr_show,
+        .store=NULL,
+    },
+    {
+        .attr={
             .name="w1",
             .mode=VERIFY_OCTAL_PERMISSIONS(0444),
         },
@@ -666,17 +1027,18 @@ static ssize_t attr_show(struct kobject *kobj, struct kobj_attribute *attr_kobj,
     }else{  //do AD sample
         adc_raw=adc_sample(iio_xbro_list[index].channel);
         adc_raw=adc_sample(iio_xbro_list[index].channel);
-        if(iio_xbro_list[index].channel<8 || iio_xbro_list[index].channel>=24){
-          adc_raw= adc_raw*1018*5/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
-        }
-        else
-        {
-            if(adc_raw>1000){
+        
+        if(iio_xbro_list[index].mode==0){
+              adc_raw= adc_raw*1018*5/4096; //ideal =adc_raw*5*1000/4096 ,,1018 for calibration
+        }else{
+              adc_raw= adc_raw*1018*12/4096; //ideal =adc_raw*12*1000/4096 ,,1018 for calibration
+              if(adc_raw >=2000){
                 adc_raw=1;
-            }else{
+              }else{
                 adc_raw=0;
-            }
+              }
         }
+        
         return snprintf(buf, PAGE_SIZE, "%u\n", adc_raw);
     }
     return -EAGAIN;
