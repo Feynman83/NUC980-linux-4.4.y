@@ -67,6 +67,26 @@ static struct iio_xbro iio_xbro_list[]={
         .name="do04",
     },
     {
+        .gpio=201,
+        .flags=GPIOF_OUT_INIT_LOW,
+        .name="do05",
+    },
+    {
+        .gpio=200,
+        .flags=GPIOF_OUT_INIT_LOW,
+        .name="do06",
+    },
+    {
+        .gpio=199,
+        .flags=GPIOF_OUT_INIT_LOW,
+        .name="do07",
+    },
+    {
+        .gpio=198,
+        .flags=GPIOF_OUT_INIT_LOW,
+        .name="do08",
+    },
+    {
         .gpio=5,
         .flags=GPIOF_OUT_INIT_LOW,
         .name="do_buzz",
