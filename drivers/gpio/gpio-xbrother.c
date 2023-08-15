@@ -501,6 +501,38 @@ static  struct kobj_attribute attr_all []={
     },
     {
         .attr={
+            .name="do05",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0664),
+        },
+        .show=attr_show,
+        .store=attr_store,
+    },
+    {
+        .attr={
+            .name="do06",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0664),
+        },
+        .show=attr_show,
+        .store=attr_store,
+    },
+    {
+        .attr={
+            .name="do07",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0664),
+        },
+        .show=attr_show,
+        .store=attr_store,
+    },
+    {
+        .attr={
+            .name="do08",
+            .mode=VERIFY_OCTAL_PERMISSIONS(0664),
+        },
+        .show=attr_show,
+        .store=attr_store,
+    },
+    {
+        .attr={
             .name="do_buzz",
             .mode=VERIFY_OCTAL_PERMISSIONS(0664),
         },
