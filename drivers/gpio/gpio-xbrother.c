@@ -68,12 +68,12 @@ static struct iio_xbro iio_xbro_list[]={
     },
     {
         .gpio=201,
-        .flags=GPIOF_OUT_INIT_LOW,
+        .flags=GPIOF_OUT_INIT_HIGH,
         .name="do05",
     },
     {
         .gpio=200,
-        .flags=GPIOF_OUT_INIT_LOW,
+        .flags=GPIOF_OUT_INIT_HIGH,
         .name="do06",
     },
     {
